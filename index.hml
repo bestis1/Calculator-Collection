@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#141E30">
+    <meta name="description" content="Ultimate Calculator Collection: Finance, Health, Engineering, and Cooking">
+    <title>Calculator Collection</title>
+    <style>
+        /* --- CSS Reset & Base --- */
+        * { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI",sans-serif; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; }
+        
+        .result, .expression, .history div, .how-to-use-content, input, .form-group label, div[id$="-result"] {
+            user-select: text; -webkit-user-select: text;
+        }
+
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        
+        body {
+            background: linear-gradient(135deg, #141E30, #243B55);
+            display:flex; justify-content:center; align-items:center;
+            transition: background 0.3s; touch-action: manipulation;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        }
+        
+        /* --- Theme: Light --- */
+        body.light { background: #f4f4f4; }
+        body.light .calculator { background:#fff; color:#222; }
+        body.light .header h1, body.light .header p { color:#444; }
+        body.light .display { background:#eee; color:#111; }
+        body.light .result { color:#000; }
+        body.light .number { background:#e0e0e0; color: #000; }
+        body.light .function { background:#d0d0d0; color: #000; }
+        body.light .history { background:rgba(0,0,0,0.05); color:#333; }
+        body.light .nav { border-top-color:#ccc; background: #fff; }
+        body.light .nav button { color:#FF9500; }
+        body.light .nav button.active { color:#fff; }
+        body.light .calculator-grid .calculator-card { background:#fff; color:#222; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        body.light input, body.light select { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); color: #333; }
+        body.light select option { background-color: #fff; color: #333; }
+        
+        /* --- Light Mode Text Visibility --- */
+        body.light .how-to-use-content { color: #222; }
+        body.light .form-group label { color: #333; }
+        body.light .settings label { 
+            background: #f5f5f5; 
+            border: 1px solid #ddd; 
+            color: #000; 
+        }
+        body.light .contact-info p { color: #444; }
+
+        /* --- Layout --- */
+        .calculator {
+            background: transparent; width:100%; height:100%;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            display:flex; flex-direction:column; justify-content: space-between;
+        }
+
+        /* --- Header --- */
+        .header {
+            text-align:center; margin-bottom:10px; padding-top:5px;
+            position: relative; min-height:40px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+        }
+        .header h1 { color:#FF9500; font-size:1.5rem; margin:0; }
+        #back-btn {
+            display: none; position: absolute; left: 15px;
+            background: none; border: none; color: #FF9500; font-size: 1rem; cursor: pointer; padding: 5px;
+        }
+
+        /* --- Displays --- */
+        .display {
+            background:#1e1e1e; border-radius:8px; padding:12px; margin:0 15px 10px 15px;
+            text-align:right; box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
+            min-height: 80px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: flex-end;
+        }
+        .expression { color:#999; font-size:1rem; min-height:20px; word-break: break-all; }
+        .result { color:#fff; font-size:1.8rem; font-weight:600; min-height:35px; word-break: break-all; }
+        
+        /* --- Buttons --- */
+        .buttons { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:0 15px 10px 15px; flex-grow: 1; }
+        button {
+            border:none; border-radius:10px; padding:12px 3px; font-size:1.1rem; font-weight:500;
+            cursor:pointer; transition:all 0.1s; color:#fff; touch-action: manipulation;
+        }
+        button:active { transform:scale(0.95); opacity: 0.8; }
+        .number { background:#444; }
+        .operator { background:#FF9500; }
+        .function { background:#5E5E5E; font-size: 1rem; }
+        .clear { background:#FF3B30; }
+        .equals { background:#4CAF50; grid-column:span 2; }
+        .add-row-btn { background: #2196F3; width: 100%; margin-bottom: 15px; }
+        .remove-row-btn { background: #FF3B30; width: auto; padding: 5px 15px; font-size: 0.9rem; margin-top: 5px; }
+
+        /* --- History --- */
+        .history {
+            background:rgba(255,255,255,0.05); border-radius:8px; padding:8px; margin:0 15px 10px 15px;
+            max-height:80px; overflow-y:auto; color:#ccc; font-size:0.8rem; flex-shrink: 0;
+        }
+        .history div { cursor: pointer; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .history div:hover { opacity: 0.8; color: #fff; }
+
+        /* --- Pages & Scroll --- */
+        .page {
+            display:none; height: 100%; overflow-y: auto; overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; padding-bottom: 20px;
+        }
+        .page.active { display:flex; flex-direction: column; flex-grow: 1; animation: fadeIn 0.2s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Home Grid --- */
+        .calculator-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px; padding: 15px; padding-bottom: 120px; overflow-y: auto; flex-grow: 1;
+        }
+        .calculator-card {
+            background: rgba(255,255,255,0.1); border-radius: 10px; padding: 15px;
+            text-align: center; cursor: pointer; min-height: 120px; border: 1px solid rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .calculator-card:active { transform: scale(0.96); background: rgba(255,255,255,0.15); }
+        .calculator-card h3 { color: #FF9500; margin-bottom: 8px; font-size: 1.1rem; }
+        .calculator-card p { color: #ccc; font-size: 0.8rem; }
+        .calculator-card .icon { font-size: 2rem; margin-bottom: 10px; color: #4CAF50; }
+
+        /* --- Forms & Inputs --- */
+        .how-to-use-content { padding: 15px; color: #fff; font-size: 1.1rem; padding-bottom: 250px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #ccc; font-size: 0.9rem; }
+        input, select {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; color: white; padding: 12px; width: 100%; font-size: 16px; margin-bottom: 10px;
+        }
+        input:focus, select:focus { outline: 2px solid #4CAF50; background: rgba(255,255,255,0.15); }
+        select option { background-color: #243B55; color: white; }
+
+        /* --- Navigation Bar --- */
+        .nav {
+            display:flex; justify-content:space-around; margin:0; border-top:1px solid #444;
+            padding:8px 0; flex-shrink: 0; 
+            background: rgba(20, 30, 48, 0.95); z-index: 100;
+        }
+        .nav button { flex:1; background:none; color:#FF9500; padding:10px 3px; min-height: 40px; }
+        .nav button.active { color:#fff; background:rgba(255, 149, 0, 0.2); border-radius:8px; }
+
+        .settings label { display:flex; align-items: center; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 15px; cursor: pointer; }
+        .settings label input { width: 20px; height: 20px; margin-right: 15px; margin-bottom: 0; }
+
+        @media (min-width: 768px) {
+            .calculator { max-width: 480px; margin: 0 auto; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+            body { background: #1a1a1a; }
+        }
+    </style>
+</head>
+<body>
+<div class="calculator">
+    <div class="header">
+        <button id="back-btn" onclick="Navigation.navigate('home')" aria-label="Back">← Back</button>
+        <h1 id="header-title">Calculator Collection</h1>
+    </div>
+
+    <!-- Home Page -->
+    <div class="page active" id="page-home">
+        <div class="calculator-grid">
+            <div class="calculator-card" onclick="Navigation.navigate('basic')">
+                <div class="icon">➕</div><h3>Basic</h3><p>Simple math</p>
+            </div>
+            <div class="calculator-card" onclick="Navigation.navigate('scientific')">
+                <div class="icon">🔬</div><h3>Scientific</h3><p>Advanced functions</p>
+            </div>
+            <div class="calculator-card" onclick="Navigation.navigate('cooking')">
+                <div class="icon">🍳</div><h3>Cooking</h3><p>Weight ↔ Volume</p>
+            </div>
+            <div class="calculator-card" onclick="Navigation.navigate('sales-tax')">
+                <div class="icon">🧾</div><h3>Sales Tax</h3><p>Calculate tax</p>
+            </div>
+            <div class="calculator-card" onclick="Navigation.navigate('loan')">
+                <div class="icon">🏠</div><h3>Loan</h3><p>Mortgage/Auto</p>
+            </div>
+            <div class="calculator-card" onclick="Navigation.navigate('savings')">
+                <div class="icon">💰</div><h3>Savings</h3><p>Compound interest</p>
+            </div>
+            <div class="calculator-card" onclick="Navigation.navigate('fuel-cost')">
+                <div class="icon">⛽</div><h3>Fuel Cost</h3><p>Trip expense</p>
+            </div>
+            <div class="calculator-card" onclick="Navigation.navigate('fuel-eff')">
+                <div class="icon">🚗</div><h3>Efficiency</h3><p>MPG / L/100km</p>
+            </div>
+            <div class="calculator-card" onclick="Navigation.navigate('gpa')">
+                <div class="icon">🎓</div><h3>GPA</h3><p>Grade average</p>
+            </div>
+            <div class="calculator-card" onclick="Navigation.navigate('ovulation')">
+                <div class="icon">📅</div><h3>Ovulation</h3><p>Fertility window</p>
+            </div>
+            <div class="calculator-card" onclick="Navigation.navigate('unit-converter')">
+                <div class="icon">🔄</div><h3>Units</h3><p>Length/Weight</p>
+            </div>
+            <div class="calculator-card" onclick="Navigation.navigate('hexadecimal')">
+                <div class="icon">#</div><h3>Hex/Bin</h3><p>Programmer</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Basic Calculator -->
+    <div class="page" id="page-basic">
+        <div class="display">
+            <div class="expression" id="basic-expression">0</div>
+            <div class="result" id="basic-result">0</div>
+        </div>
+        <div class="buttons" id="basic-buttons">
+            <button class="clear" onclick="BasicCalc.clearAll()">AC</button>
+            <button class="clear" onclick="BasicCalc.clearEntry()">C</button>
+            <button class="function" onclick="BasicCalc.backspace()">⌫</button>
+            <button class="operator" onclick="BasicCalc.append('/')">÷</button>
+            <button class="function" onclick="BasicCalc.append('%')">%</button>
+            <button class="number" onclick="BasicCalc.append('7')">7</button>
+            <button class="number" onclick="BasicCalc.append('8')">8</button>
+            <button class="number" onclick="BasicCalc.append('9')">9</button>
+            <button class="operator" onclick="BasicCalc.append('*')">×</button>
+            <button class="function" onclick="BasicCalc.appendFunc('sqrt')">√</button>
+            <button class="number" onclick="BasicCalc.append('4')">4</button>
+            <button class="number" onclick="BasicCalc.append('5')">5</button>
+            <button class="number" onclick="BasicCalc.append('6')">6</button>
+            <button class="operator" onclick="BasicCalc.append('-')">−</button>
+            <button class="function" onclick="BasicCalc.appendFunc('square')">x²</button>
+            <button class="number" onclick="BasicCalc.append('1')">1</button>
+            <button class="number" onclick="BasicCalc.append('2')">2</button>
+            <button class="number" onclick="BasicCalc.append('3')">3</button>
+            <button class="operator" onclick="BasicCalc.append('+')">+</button>
+            <button class="function" onclick="BasicCalc.reciprocal()">1/x</button>
+            <button class="number" onclick="BasicCalc.append('0')">0</button>
+            <button class="number" onclick="BasicCalc.append('.')">.</button>
+            <button class="function" onclick="BasicCalc.toggleSign()">±</button>
+            <button class="equals" onclick="BasicCalc.calculate()" style="grid-column:span 2;">=</button>
+        </div>
+        <div class="history" id="basic-history"></div>
+    </div>
+
+    <!-- Scientific Calculator -->
+    <div class="page" id="page-scientific">
+        <div class="display">
+            <div class="expression" id="sci-expression">0</div>
+            <div class="result" id="sci-result">0</div>
+        </div>
+        <div class="buttons">
+            <button class="clear" onclick="SciCalc.clearAll()">AC</button>
+            <button class="clear" onclick="SciCalc.clearEntry()">C</button>
+            <button class="function" onclick="SciCalc.backspace()">⌫</button>
+            <button class="function" onclick="SciCalc.append('%')">%</button>
+            <button class="function" onclick="SciCalc.appendFunc('sqrt')">√</button>
+            <button class="function" onclick="SciCalc.appendFunc('sin')">sin</button>
+            <button class="function" onclick="SciCalc.appendFunc('cos')">cos</button>
+            <button class="function" onclick="SciCalc.appendFunc('tan')">tan</button>
+            <button class="function" onclick="SciCalc.append('^')">^</button>
+            <button class="function" onclick="SciCalc.appendFunc('factorial')">x!</button>
+            <button class="function" onclick="SciCalc.append('π')">π</button>
+            <button class="function" onclick="SciCalc.append('e')">e</button>
+            <button class="function" onclick="SciCalc.append('(')">(</button>
+            <button class="function" onclick="SciCalc.append(')')">)</button>
+            <button class="function" onclick="SciCalc.appendFunc('log')">log</button>
+            <button class="number" onclick="SciCalc.append('7')">7</button>
+            <button class="number" onclick="SciCalc.append('8')">8</button>
+            <button class="number" onclick="SciCalc.append('9')">9</button>
+            <button class="operator" onclick="SciCalc.append('/')">÷</button>
+            <button class="function" onclick="SciCalc.appendFunc('ln')">ln</button>
+            <button class="number" onclick="SciCalc.append('4')">4</button>
+            <button class="number" onclick="SciCalc.append('5')">5</button>
+            <button class="number" onclick="SciCalc.append('6')">6</button>
+            <button class="operator" onclick="SciCalc.append('*')">×</button>
+            <button class="function" onclick="SciCalc.appendFunc('pow10')">10ˣ</button>
+            <button class="number" onclick="SciCalc.append('1')">1</button>
+            <button class="number" onclick="SciCalc.append('2')">2</button>
+            <button class="number" onclick="SciCalc.append('3')">3</button>
+            <button class="operator" onclick="SciCalc.append('-')">−</button>
+            <button class="function" onclick="SciCalc.reciprocal()">1/x</button>
+            <button class="number" onclick="SciCalc.append('0')">0</button>
+            <button class="number" onclick="SciCalc.append('.')">.</button>
+            <button class="fraction-btn" onclick="SciCalc.convertFraction()">a/b</button>
+            <button class="operator" onclick="SciCalc.append('+')">+</button>
+            <button class="equals" onclick="SciCalc.calculate()">=</button>
+        </div>
+        <div class="history" id="sci-history"></div>
+    </div>
+
+    <!-- Hex Calculator -->
+    <div class="page" id="page-hexadecimal">
+        <div class="display">
+            <div class="expression" id="hex-expression">0</div>
+            <div class="result" id="hex-result">0</div>
+        </div>
+        <div class="buttons">
+            <button class="clear" onclick="HexCalc.clearAll()">AC</button>
+            <button class="function" onclick="HexCalc.backspace()">⌫</button>
+            <button class="operator" onclick="HexCalc.append('/')">÷</button>
+            <button class="function" onclick="HexCalc.convert('dec')">DEC</button>
+            <button class="function" onclick="HexCalc.convert('hex')">HEX</button>
+            <button class="number" onclick="HexCalc.append('A')">A</button>
+            <button class="number" onclick="HexCalc.append('B')">B</button>
+            <button class="number" onclick="HexCalc.append('C')">C</button>
+            <button class="operator" onclick="HexCalc.append('*')">×</button>
+            <button class="function" onclick="HexCalc.convert('bin')">BIN</button>
+            <button class="number" onclick="HexCalc.append('D')">D</button>
+            <button class="number" onclick="HexCalc.append('E')">E</button>
+            <button class="number" onclick="HexCalc.append('F')">F</button>
+            <button class="operator" onclick="HexCalc.append('-')">−</button>
+            <button class="function" onclick="HexCalc.convert('oct')">OCT</button>
+            <button class="number" onclick="HexCalc.append('7')">7</button>
+            <button class="number" onclick="HexCalc.append('8')">8</button>
+            <button class="number" onclick="HexCalc.append('9')">9</button>
+            <button class="operator" onclick="HexCalc.append('+')">+</button>
+            <button class="number" onclick="HexCalc.append('4')">4</button>
+            <button class="number" onclick="HexCalc.append('5')">5</button>
+            <button class="number" onclick="HexCalc.append('6')">6</button>
+            <button class="operator" onclick="HexCalc.append('&')">AND</button>
+            <button class="function" onclick="HexCalc.append('|')">OR</button>
+            <button class="number" onclick="HexCalc.append('1')">1</button>
+            <button class="number" onclick="HexCalc.append('2')">2</button>
+            <button class="number" onclick="HexCalc.append('3')">3</button>
+            <button class="number" onclick="HexCalc.append('0')">0</button>
+            <button class="function" onclick="HexCalc.append('^')">XOR</button>
+            <button class="equals" onclick="HexCalc.calculate()" style="grid-column:span 5;">=</button>
+        </div>
+        <div class="history" id="hex-history"></div>
+    </div>
+
+    <!-- Cooking Calculator -->
+    <div class="page" id="page-cooking">
+        <h2>Cooking Converter</h2>
+        <div class="how-to-use-content">
+            <div class="how-to-use-item">
+                <p>Convert between Weight (g) and Volume (cups/spoons) based on the ingredient.</p>
+                <div class="form-group"><label>Ingredient</label>
+                    <select id="cook-ingredient">
+                        <option value="water">Water / Milk / Vinegar</option>
+                        <option value="flour">Flour (All-Purpose)</option>
+                        <option value="sugar">Sugar (Granulated)</option>
+                        <option value="brown_sugar">Brown Sugar (Packed)</option>
+                        <option value="butter">Butter</option>
+                        <option value="oil">Cooking Oil</option>
+                        <option value="rice">Rice (Uncooked)</option>
+                        <option value="oats">Oats (Rolled)</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>From</label>
+                    <select id="cook-from">
+                        <option value="g">Grams (g)</option>
+                        <option value="kg">Kilograms (kg)</option>
+                        <option value="cup">Cups (US)</option>
+                        <option value="tbsp">Tablespoons</option>
+                        <option value="tsp">Teaspoons</option>
+                    </select>
+                </div>
+                <div class="form-group"><input type="number" id="cook-val" placeholder="Value"></div>
+                <div class="form-group"><label>To</label>
+                    <select id="cook-to">
+                        <option value="cup">Cups (US)</option>
+                        <option value="g">Grams (g)</option>
+                        <option value="kg">Kilograms (kg)</option>
+                        <option value="tbsp">Tablespoons</option>
+                        <option value="tsp">Teaspoons</option>
+                    </select>
+                </div>
+                <button class="equals" onclick="SubCalcs.calcCooking()">Convert</button>
+                <div id="cook-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Tax -->
+    <div class="page" id="page-sales-tax">
+        <h2>Sales Tax</h2>
+        <div class="how-to-use-content">
+            <div class="how-to-use-item">
+                <div class="form-group"><label>Price Before Tax</label><input type="number" id="tax-price"></div>
+                <div class="form-group"><label>Tax Rate (%)</label><input type="number" id="tax-rate"></div>
+                <button class="equals" onclick="SubCalcs.calcSalesTax()">Calculate</button>
+                <div id="tax-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loan -->
+    <div class="page" id="page-loan">
+        <h2>Loan Calculator</h2>
+        <div class="how-to-use-content">
+            <div class="how-to-use-item">
+                <div class="form-group"><label>Loan Amount ($)</label><input type="number" id="loan-amt"></div>
+                <div class="form-group"><label>Annual Interest Rate (%)</label><input type="number" id="loan-rate"></div>
+                <div class="form-group"><label>Loan Term (Years)</label><input type="number" id="loan-years"></div>
+                <button class="equals" onclick="SubCalcs.calcLoan()">Calculate</button>
+                <div id="loan-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Savings -->
+    <div class="page" id="page-savings">
+        <h2>Savings Calculator</h2>
+        <div class="how-to-use-content">
+            <div class="how-to-use-item">
+                <div class="form-group"><label>Initial Deposit ($)</label><input type="number" id="save-init"></div>
+                <div class="form-group"><label>Monthly Contribution ($)</label><input type="number" id="save-monthly"></div>
+                <div class="form-group"><label>Annual Interest Rate (%)</label><input type="number" id="save-rate"></div>
+                <div class="form-group"><label>Years to Grow</label><input type="number" id="save-years"></div>
+                <button class="equals" onclick="SubCalcs.calcSavings()">Calculate</button>
+                <div id="save-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fuel Cost -->
+    <div class="page" id="page-fuel-cost">
+        <h2>Fuel Cost</h2>
+        <div class="how-to-use-content">
+            <div class="how-to-use-item">
+                <div class="form-group"><label>Trip Distance (km/miles)</label><input type="number" id="fuel-dist"></div>
+                <div class="form-group"><label>Fuel Efficiency (MPG or L/100km)</label><input type="number" id="fuel-eff-val"></div>
+                <div class="form-group"><label>Fuel Price (per gallon/liter)</label><input type="number" id="fuel-price"></div>
+                <div class="form-group"><label>Formula Type</label>
+                    <select id="fuel-type">
+                        <option value="us">US (Miles / MPG / Price per Gal)</option>
+                        <option value="metric">Metric (km / L per 100km / Price per L)</option>
+                    </select>
+                </div>
+                <button class="equals" onclick="SubCalcs.calcFuelCost()">Calculate Cost</button>
+                <div id="fuel-cost-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fuel Efficiency -->
+    <div class="page" id="page-fuel-eff">
+        <h2>Fuel Efficiency</h2>
+        <div class="how-to-use-content">
+            <div class="how-to-use-item">
+                <div class="form-group"><label>Distance Traveled</label><input type="number" id="eff-dist"></div>
+                <div class="form-group"><label>Fuel Used</label><input type="number" id="eff-fuel"></div>
+                <button class="equals" onclick="SubCalcs.calcFuelEff()">Calculate</button>
+                <div id="eff-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GPA -->
+    <div class="page" id="page-gpa">
+        <h2>GPA Calculator</h2>
+        <div class="how-to-use-content">
+            <div class="how-to-use-item">
+                <div id="gpa-rows"></div>
+                <button class="add-row-btn" onclick="SubCalcs.addGpaRow()">+ Add Course</button>
+                <button class="equals" onclick="SubCalcs.calcGPA()">Calculate GPA</button>
+                <div id="gpa-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ovulation -->
+    <div class="page" id="page-ovulation">
+        <h2>Ovulation Calculator</h2>
+        <div class="how-to-use-content">
+            <div class="how-to-use-item">
+                <div class="form-group"><label>First Day of Last Period</label><input type="date" id="ov-date"></div>
+                <div class="form-group"><label>Average Cycle Length (Days)</label><input type="number" id="ov-cycle" value="28"></div>
+                <button class="equals" onclick="SubCalcs.calcOvulation()">Calculate</button>
+                <div id="ov-result"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Unit Converter -->
+    <div class="page" id="page-unit-converter">
+        <h2>Unit Converter</h2>
+        <div class="how-to-use-content">
+            <div class="how-to-use-item">
+                <div class="form-group"><label>From</label>
+                    <select id="unit-from">
+                        <option value="m">Meters</option><option value="ft">Feet</option>
+                        <option value="in">Inches</option><option value="km">Kilometers</option>
+                        <option value="mi">Miles</option><option value="lb">Pounds</option><option value="kg">Kilograms</option>
+                    </select>
+                </div>
+                <div class="form-group"><input type="number" id="unit-val" placeholder="Value"></div>
+                <div class="form-group"><label>To</label>
+                    <select id="unit-to">
+                        <option value="m">Meters</option><option value="ft">Feet</option>
+                        <option value="in">Inches</option><option value="km">Kilometers</option>
+                        <option value="mi">Miles</option><option value="lb">Pounds</option><option value="kg">Kilograms</option>
+                    </select>
+                </div>
+                <button class="equals" onclick="SubCalcs.calcUnit()">Convert</button>
+                <div id="unit-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="page" id="page-settings">
+        <h2>Settings</h2>
+        <div class="how-to-use-content">
+            <div class="settings">
+                <label>
+                    <input type="checkbox" id="toggle-theme">
+                    <span>Light Mode</span>
+                </label>
+                <label>
+                    <input type="checkbox" id="keep-history">
+                    <span>Remember History</span>
+                </label>
+                <label onclick="HistoryManager.clearAll()">
+                    <span>🗑️ Clear All History</span>
+                </label>
+            </div>
+            <div class="contact-info" style="margin-top: 20px; text-align: center; color: #ccc; font-size: 0.9rem;">
+                <p>Contact Support Email: <a href="mailto:contact@bestis1.com" style="color: #FF9500; text-decoration: none;">contact@bestis1.com</a></p>
+                <p>We are here to help with any questions or issues</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <button onclick="Navigation.navigate('home')" class="active">Home</button>
+        <button onclick="Navigation.navigate('settings')">Settings</button>
+    </div>
+</div>
+
+<script>
+/** UTILITIES **/
+const Utils = {
+    strip: (num) => parseFloat(parseFloat(num).toPrecision(12)),
+    copy: (text, element) => {
+        navigator.clipboard.writeText(text).then(() => {
+            const original = element.textContent; element.textContent = "Copied!";
+            setTimeout(() => element.textContent = original, 800);
+        });
+    }
+};
+
+/** HISTORY MANAGER **/
+const HistoryManager = {
+    data: [],
+    init() {
+        const saved = localStorage.getItem('calc_history');
+        if (saved) { this.data = JSON.parse(saved); this.renderAll(); }
+    },
+    add(type, expr, result) {
+        if (!document.getElementById('keep-history').checked) return;
+        const entry = { type, expr, result, ts: Date.now() };
+        this.data.unshift(entry);
+        if (this.data.length > 50) this.data.pop();
+        localStorage.setItem('calc_history', JSON.stringify(this.data));
+        this.renderOne(type, entry);
+    },
+    renderOne(type, entry) {
+        const container = document.getElementById(type + '-history');
+        if (!container) return;
+        const div = document.createElement('div');
+        div.textContent = `${entry.expr} = ${entry.result}`;
+        div.onclick = function() { Utils.copy(entry.result, this); };
+        container.insertBefore(div, container.firstChild);
+    },
+    renderAll() {
+        ['basic', 'sci', 'hex'].forEach(id => {
+            const el = document.getElementById(id + '-history');
+            if(el) el.innerHTML = '';
+        });
+        [...this.data].reverse().forEach(entry => this.renderOne(entry.type, entry));
+    },
+    clearAll() { this.data = []; localStorage.removeItem('calc_history'); this.renderAll(); alert("History Cleared"); }
+};
+
+/** NAVIGATION **/
+const Navigation = {
+    init() {
+        window.addEventListener('popstate', (event) => {
+            const page = event.state ? event.state.page : 'home';
+            this.showPage(page, false);
+        });
+
+        const hash = window.location.hash.replace('#', '');
+        if (hash) {
+            this.navigate(hash);
+        } else {
+            try {
+                window.history.replaceState({ page: 'home' }, '', window.location.pathname);
+            } catch(e) { /* Ignore file:// errors */ }
+        }
+    },
+    navigate(pageId) {
+        try {
+            if (pageId === 'home') {
+                window.history.pushState({ page: 'home' }, '', window.location.pathname + window.location.search);
+            } else {
+                window.history.pushState({ page: pageId }, '', '#' + pageId);
+            }
+        } catch (e) {
+            console.log("History API not supported (local file mode). UI will still update.");
+        }
+
+        if (pageId === 'home') {
+            this.showPage('home', false);
+        } else {
+            this.showPage(pageId, true);
+        }
+    },
+    showPage(pageId, isTool) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        
+        const targetId = `page-${pageId}`;
+        const el = document.getElementById(targetId);
+        if (el) el.classList.add('active');
+        
+        const headerTitle = document.getElementById('header-title');
+        const backBtn = document.getElementById('back-btn');
+        
+        if (isTool || pageId === 'settings') { 
+            headerTitle.style.display = 'none'; 
+            backBtn.style.display = 'block'; 
+        } else { 
+            headerTitle.style.display = 'block'; 
+            backBtn.style.display = 'none'; 
+        }
+        
+        document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+        if (pageId === 'home') document.querySelector('.nav button:nth-child(1)').classList.add('active');
+        if (pageId === 'settings') document.querySelector('.nav button:nth-child(2)').classList.add('active');
+    }
+};
+
+/** BASIC CALC **/
+const BasicCalc = {
+    expr: '', display: document.getElementById('basic-expression'), resultDisplay: document.getElementById('basic-result'),
+    append(val) { this.expr += val; this.update(); },
+    appendFunc(f) { if(f==='sqrt') this.expr += '√('; if(f==='square') this.expr += '^2'; this.update(); },
+    backspace() { this.expr = this.expr.slice(0, -1); this.update(); },
+    clearEntry() { this.expr = ''; this.update(); },
+    clearAll() { this.expr = ''; this.resultDisplay.textContent = '0'; this.update(); },
+    toggleSign() { if(this.expr.startsWith('-')) this.expr = this.expr.substring(1); else this.expr = '-' + this.expr; this.update(); },
+    reciprocal() { if(this.resultDisplay.textContent !== '0') { this.expr = `1/(${this.resultDisplay.textContent})`; this.calculate(); } },
+    update() { this.display.textContent = this.expr || '0'; },
+    calculate() {
+        try {
+            if (!this.expr) return;
+            let parsed = this.expr.replace(/(\d+(?:\.\d+)?)([\+\-])(\d+(?:\.\d+)?)%/g, (m,n1,op,n2) => `${n1}${op}(${n1}*${n2}/100)`);
+            parsed = parsed.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
+            parsed = parsed.replace(/×/g, '*').replace(/÷/g, '/').replace(/√\(/g, 'Math.sqrt(').replace(/\^2/g, '**2');
+            const res = Utils.strip(eval(parsed));
+            this.resultDisplay.textContent = res;
+            HistoryManager.add('basic', this.expr, res); this.expr = '';
+        } catch (e) { this.resultDisplay.textContent = "Error"; }
+    }
+};
+
+/** SCI CALC **/
+const SciCalc = {
+    expr: '',
+    update() { document.getElementById('sci-expression').textContent = this.expr || '0'; },
+    append(v) { this.expr += v; this.update(); },
+    appendFunc(f) {
+        const map = { sqrt: '√(', sin:'sin(', cos:'cos(', tan:'tan(', log:'log(', ln:'ln(', pow10:'10^', factorial:'!' };
+        this.expr += map[f] || f; this.update();
+    },
+    backspace() { this.expr = this.expr.slice(0, -1); this.update(); },
+    clearAll() { this.expr = ''; document.getElementById('sci-result').textContent = '0'; this.update(); },
+    clearEntry() { this.expr = ''; this.update(); },
+    convertFraction() { /* Placeholder */ },
+    reciprocal() { this.expr = `1/(${document.getElementById('sci-result').textContent})`; this.calculate(); },
+    calculate() {
+        try {
+            if(!this.expr) return;
+            let s = this.expr.replace(/π/g, Math.PI).replace(/e/g, Math.E).replace(/√\(/g, 'Math.sqrt(').replace(/\^/g, '**')
+                .replace(/sin/g, 'Math.sin').replace(/cos/g, 'Math.cos').replace(/tan/g, 'Math.tan')
+                .replace(/log\(/g, 'Math.log10(').replace(/ln\(/g, 'Math.log(').replace(/%/g, '/100');
+            if(s.includes('!')) { alert("Complex Factorial not supported"); return; }
+            const res = Utils.strip(eval(s));
+            document.getElementById('sci-result').textContent = res;
+            HistoryManager.add('sci', this.expr, res); this.expr = '';
+        } catch(e) { document.getElementById('sci-result').textContent = "Error"; }
+    }
+};
+
+/** HEX CALC **/
+const HexCalc = {
+    expr: '',
+    update() { document.getElementById('hex-expression').textContent = this.expr || '0'; },
+    append(v) { this.expr += v; this.update(); },
+    backspace() { this.expr = this.expr.slice(0, -1); this.update(); },
+    clearAll() { this.expr = ''; document.getElementById('hex-result').textContent = '0'; this.update(); },
+    clearEntry() { this.expr = ''; this.update(); },
+    calculate() {
+        try {
+            const tokens = this.expr.match(/([0-9A-F]+)|([+\-*/&|^])/gi);
+            if (!tokens) return;
+            let res = parseInt(tokens[0], 16);
+            for(let i=1; i<tokens.length; i+=2) {
+                const op = tokens[i], val = parseInt(tokens[i+1], 16);
+                if (op === '+') res += val; else if (op === '-') res -= val; else if (op === '*') res *= val;
+                else if (op === '/') res = Math.floor(res/val); else if (op === '&') res &= val;
+                else if (op === '|') res |= val; else if (op === '^') res ^= val;
+            }
+            const hexRes = res.toString(16).toUpperCase();
+            document.getElementById('hex-result').textContent = hexRes;
+            HistoryManager.add('hex', this.expr, hexRes); this.expr = '';
+        } catch(e) { document.getElementById('hex-result').textContent = "Error"; }
+    },
+    convert(type) {
+        const val = parseInt(this.expr || document.getElementById('hex-result').textContent, 16);
+        if(isNaN(val)) return;
+        let s = '';
+        if(type==='dec') s=val.toString(10); if(type==='bin') s=val.toString(2);
+        if(type==='oct') s=val.toString(8); if(type==='hex') s=val.toString(16).toUpperCase();
+        document.getElementById('hex-result').textContent = s;
+    }
+};
+
+/** SUB-CALCULATORS **/
+const SubCalcs = {
+    // 1. Sales Tax
+    calcSalesTax() {
+        const p = parseFloat(document.getElementById('tax-price').value);
+        const r = parseFloat(document.getElementById('tax-rate').value);
+        if(!isNaN(p) && !isNaN(r)) {
+            const tax = Utils.strip(p * (r/100));
+            document.getElementById('tax-result').innerHTML = `Tax: $${tax} <br> <strong>Total: $${Utils.strip(p+tax)}</strong>`;
+        }
+    },
+    // 2. Loan
+    calcLoan() {
+        const p = parseFloat(document.getElementById('loan-amt').value);
+        const r = parseFloat(document.getElementById('loan-rate').value) / 100 / 12;
+        const n = parseFloat(document.getElementById('loan-years').value) * 12;
+        if(p && r && n) {
+            const m = (p * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
+            document.getElementById('loan-result').innerHTML = `Monthly: <strong>$${m.toFixed(2)}</strong> <br> Total Interest: $${((m*n)-p).toFixed(2)}`;
+        }
+    },
+    // 3. Savings
+    calcSavings() {
+        const p = parseFloat(document.getElementById('save-init').value) || 0;
+        const c = parseFloat(document.getElementById('save-monthly').value) || 0;
+        const r = parseFloat(document.getElementById('save-rate').value) / 100 / 12;
+        const n = parseFloat(document.getElementById('save-years').value) * 12;
+        if(n) {
+            let f = p * Math.pow(1+r, n); // Initial compounding
+            if(r > 0) f += c * (Math.pow(1+r, n) - 1) / r; // Monthly contributions
+            else f += c * n;
+            document.getElementById('save-result').innerHTML = `Future Value: <strong>$${f.toFixed(2)}</strong>`;
+        }
+    },
+    // 4. Fuel Cost
+    calcFuelCost() {
+        const d = parseFloat(document.getElementById('fuel-dist').value);
+        const eff = parseFloat(document.getElementById('fuel-eff-val').value);
+        const p = parseFloat(document.getElementById('fuel-price').value);
+        const type = document.getElementById('fuel-type').value;
+        if(d && eff && p) {
+            let cost = 0;
+            if(type === 'us') cost = (d / eff) * p; // Miles / MPG * Price
+            else cost = (d / 100) * eff * p; // (km / 100) * (L/100km) * Price
+            document.getElementById('fuel-cost-result').innerHTML = `Trip Cost: <strong>$${cost.toFixed(2)}</strong>`;
+        }
+    },
+    // 5. Fuel Efficiency
+    calcFuelEff() {
+        const d = parseFloat(document.getElementById('eff-dist').value);
+        const f = parseFloat(document.getElementById('eff-fuel').value);
+        if(d && f) {
+            const mpg = d / f; // Miles per Gal or km per L
+            const l100 = (f / d) * 100; // L per 100km
+            document.getElementById('eff-result').innerHTML = `Efficiency: ${mpg.toFixed(1)} MPG (or km/L) <br> ${l100.toFixed(1)} L/100km`;
+        }
+    },
+    // 6. GPA
+    addGpaRow() {
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        div.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+        div.innerHTML = `
+            <select class="gpa-grade" style="width:60%; display:inline-block">
+                <option value="4.0">A (4.0)</option><option value="3.7">A- (3.7)</option>
+                <option value="3.3">B+ (3.3)</option><option value="3.0">B (3.0)</option>
+                <option value="2.0">C (2.0)</option><option value="1.0">D (1.0)</option>
+                <option value="0.0">F (0.0)</option>
+            </select>
+            <input type="number" class="gpa-credit" placeholder="Cr" style="width:35%; display:inline-block">
+            <button class="remove-row-btn" onclick="this.parentElement.remove()">Remove</button>
+        `;
+        document.getElementById('gpa-rows').appendChild(div);
+    },
+    calcGPA() {
+        let pts = 0, credits = 0;
+        document.querySelectorAll('#gpa-rows .form-group').forEach(row => {
+            const g = parseFloat(row.querySelector('.gpa-grade').value);
+            const c = parseFloat(row.querySelector('.gpa-credit').value);
+            if(!isNaN(c)) { pts += g*c; credits += c; }
+        });
+        document.getElementById('gpa-result').innerHTML = credits ? `GPA: <strong>${(pts/credits).toFixed(2)}</strong>` : 'Add courses';
+    },
+    // 7. Ovulation
+    calcOvulation() {
+        const dateStr = document.getElementById('ov-date').value;
+        const cycle = parseInt(document.getElementById('ov-cycle').value);
+        if(dateStr && cycle) {
+            const d = new Date(dateStr);
+            d.setDate(d.getDate() + cycle - 14); // Ovulation approx 14 days before next period
+            const fStart = new Date(d); fStart.setDate(d.getDate() - 5);
+            const fEnd = new Date(d); fEnd.setDate(d.getDate() + 1);
+            document.getElementById('ov-result').innerHTML = 
+                `Ovulation: ${d.toLocaleDateString()} <br> Fertile: ${fStart.toLocaleDateString()} - ${fEnd.toLocaleDateString()}`;
+        }
+    },
+    // 8. Cooking Converter (Weight <-> Volume)
+    calcCooking() {
+        const ing = document.getElementById('cook-ingredient').value;
+        const f = document.getElementById('cook-from').value;
+        const t = document.getElementById('cook-to').value;
+        const v = parseFloat(document.getElementById('cook-val').value);
+        
+        // Density Table (g per 1 cup US)
+        const density = {
+            water: 237, flour: 120, sugar: 200, brown_sugar: 220, 
+            butter: 227, oil: 224, rice: 185, oats: 90
+        };
+        // Unit factors relative to 1 Cup
+        // Vol: cup=1, tbsp=1/16, tsp=1/48. Weight: g=1/density, kg=1000/density
+        
+        if(!isNaN(v)) {
+            // 1. Convert Input to "Cups" (Volume base)
+            let valInCups = 0;
+            const d = density[ing]; // grams per cup
+            
+            // From Volume
+            if(f === 'cup') valInCups = v;
+            else if(f === 'tbsp') valInCups = v / 16;
+            else if(f === 'tsp') valInCups = v / 48;
+            // From Weight (Weight / Density = Volume)
+            else if(f === 'g') valInCups = v / d;
+            else if(f === 'kg') valInCups = (v * 1000) / d;
+
+            // 2. Convert "Cups" to Output
+            let res = 0;
+            // To Volume
+            if(t === 'cup') res = valInCups;
+            else if(t === 'tbsp') res = valInCups * 16;
+            else if(t === 'tsp') res = valInCups * 48;
+            // To Weight (Volume * Density = Weight)
+            else if(t === 'g') res = valInCups * d;
+            else if(t === 'kg') res = (valInCups * d) / 1000;
+
+            document.getElementById('cook-result').textContent = `${Utils.strip(res)} ${t}`;
+        }
+    },
+    // Existing Unit Calc
+    calcUnit() {
+        const map = { m:1, ft:0.3048, in:0.0254, km:1000, mi:1609.34, kg:1, lb:0.453592 };
+        const f = document.getElementById('unit-from').value;
+        const t = document.getElementById('unit-to').value;
+        const v = parseFloat(document.getElementById('unit-val').value);
+        if(!isNaN(v)) {
+            const base = v * map[f];
+            const res = Utils.strip(base / map[t]);
+            document.getElementById('unit-result').textContent = res;
+        }
+    }
+};
+
+/** INITIALIZATION **/
+(function init() {
+    Navigation.init();
+    HistoryManager.init();
+    SubCalcs.addGpaRow(); // Add first row
+    
+    // Theme
+    const themeToggle = document.getElementById('toggle-theme');
+    const histToggle = document.getElementById('keep-history');
+    if(localStorage.getItem('theme') === 'light') { document.body.classList.add('light'); themeToggle.checked = true; }
+    
+    themeToggle.addEventListener('change', (e) => {
+        document.body.classList.toggle('light', e.target.checked);
+        localStorage.setItem('theme', e.target.checked ? 'light' : 'dark');
+    });
+    histToggle.addEventListener('change', (e) => { if(!e.target.checked) HistoryManager.clearAll(); });
+    
+    // Keyboard
+    document.addEventListener('keydown', (e) => {
+        if(document.getElementById('page-basic').classList.contains('active')) {
+            const k = e.key;
+            if(/[0-9.%]/.test(k)) BasicCalc.append(k);
+            if(['+','-','*','/'].includes(k)) BasicCalc.append(k);
+            if(k === 'Enter') BasicCalc.calculate();
+            if(k === 'Backspace') BasicCalc.backspace();
+            if(k === 'Escape') BasicCalc.clearAll();
+        }
+    });
+})();
+</script>
+</body>
+</html>
