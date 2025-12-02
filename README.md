@@ -71,3 +71,8 @@ The Calculator Collection is a versatile web application designed to provide a w
 1. Clone the repository:
    ```bash
    git clone https://github.com/bestis1/Calculator-Collection.git
+
+For questions, suggestions, or issues, please contact us at:
+
+Email: contact@bestis1.com
+GitHub: bestis1
