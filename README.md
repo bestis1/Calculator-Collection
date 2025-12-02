@@ -1,18 +1,19 @@
 ### Home Screen
-![Home Screen](upload/main/home-screen.png)
+![Home Screen](home-screen.png)
 The home screen of the Calculator Collection app, showing various calculator options.
 
 ### Fuel Cost Calculator
-![Fuel Cost Calculator](upload/main/fuel-cost-calculator.png)
+![Fuel Cost Calculator](fuel-cost-calculator.png)
 The Fuel Cost Calculator for estimating trip expenses.
 
 ### Scientific Calculator
-![Scientific Calculator](upload/main/scientific-calculator.png)
+![Scientific Calculator](scientific-calculator.png)
 The Scientific Calculator with advanced functions.
 
 ### Cooking Converter
-![Cooking Converter](upload/main/cooking-converter.png)
+![Cooking Converter](cooking-converter.png)
 The Cooking Converter for converting between weight and volume.
+
 
 
 
