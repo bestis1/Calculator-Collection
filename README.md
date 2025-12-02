@@ -1,5 +1,3 @@
-## Some Screenshots
-
 ### Home Screen
 ![Home Screen](upload/main/home-screen.png)
 The home screen of the Calculator Collection app, showing various calculator options.
@@ -15,6 +13,7 @@ The Scientific Calculator with advanced functions.
 ### Cooking Converter
 ![Cooking Converter](upload/main/cooking-converter.png)
 The Cooking Converter for converting between weight and volume.
+
 
 
 # Calculator Collection
