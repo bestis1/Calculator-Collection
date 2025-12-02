@@ -26,9 +26,6 @@ The settings screen of the Calculator Collection app, showing options for Light 
 # Calculator Collection
 
 A comprehensive web-based collection of calculators for everyday use, including basic arithmetic, scientific calculations, cooking conversions, financial tools, and more.
-
-![Calculator Collection Preview](https://via.placeholder.com/600x400/141E30/FFFFFF?text=Calculator+Collection)
-
 ---
 
 ## Table of Contents
