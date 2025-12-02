@@ -14,6 +14,11 @@ The Scientific Calculator with advanced functions.
 ![Cooking Converter](cooking-converter.png)
 The Cooking Converter for converting between weight and volume.
 
+### Settings Screen
+![Settings Screen](settings-screen.png)
+The settings screen of the Calculator Collection app, showing options for Light Mode, Remember History, and Clear All History.
+
+
 
 
 
